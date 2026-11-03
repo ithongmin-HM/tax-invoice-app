@@ -1,0 +1,1010 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ระบบออกใบกำกับภาษีอย่างย่อ (ABB) - บริษัท สยามฮ่องกง ไชนีสฟู้ด จำกัด</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Prompt & Sarabun Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&family=Sarabun:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Prompt', 'sans-serif'],
+                        sarabun: ['Sarabun', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            50: '#fff1f2',
+                            100: '#ffe4e6',
+                            600: '#e11d48',
+                            700: '#be123c',
+                            800: '#9f1239',
+                            900: '#881337',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* CSS Custom Print Setup */
+        @media print {
+            body {
+                background: white !important;
+                color: black !important;
+                font-family: 'Sarabun', sans-serif !important;
+                padding: 0 !important;
+                margin: 0 !important;
+            }
+            .no-print {
+                display: none !important;
+            }
+            .print-only {
+                display: block !important;
+            }
+            .page-break {
+                page-break-after: always;
+            }
+            .printable-area {
+                box-shadow: none !important;
+                border: none !important;
+                padding: 0 !important;
+                margin: 0 !important;
+                width: 100% !important;
+                max-width: 100% !important;
+            }
+            @page {
+                size: A4 portrait;
+                margin: 8mm 12mm;
+            }
+        }
+        
+        .tab-active {
+            border-bottom: 3px solid #be123c;
+            color: #be123c;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body class="bg-slate-100 font-sans text-slate-800 min-h-screen flex flex-col">
+
+    <!-- Top Navigation Bar (No Print) -->
+    <header class="no-print bg-slate-900 text-white shadow-md sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 rounded-full bg-brand-700 flex items-center justify-center font-bold text-lg text-white shadow">
+                    SH
+                </div>
+                <div>
+                    <h1 class="font-bold text-lg leading-tight">ระบบออกใบกำกับภาษีอย่างย่อ (ABB)</h1>
+                    <p class="text-xs text-slate-400">บริษัท สยามฮ่องกง ไชนีสฟู้ด จำกัด (Siam Hongkong Chinese Food Co., Ltd.)</p>
+                </div>
+            </div>
+            
+            <div class="flex items-center space-x-3">
+                <button onclick="openSettingsModal()" class="px-3 py-1.5 text-xs bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg border border-slate-700 flex items-center space-x-1.5 transition">
+                    <i class="fa-solid fa-gear"></i>
+                    <span class="hidden sm:inline">ตั้งค่า Google Sheets API</span>
+                </button>
+                <div class="h-6 w-px bg-slate-700"></div>
+                <span id="connectionStatus" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800">
+                    <span class="w-2 h-2 mr-1.5 bg-emerald-500 rounded-full animate-pulse"></span>พร้อมใช้งาน
+                </span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8">
+        
+        <!-- Action Toolbar (No Print) -->
+        <div class="no-print mb-6 bg-white p-4 rounded-2xl shadow-sm border border-slate-200 flex flex-wrap gap-4 items-center justify-between">
+            <div class="flex items-center space-x-2">
+                <span class="text-sm font-semibold text-slate-600">โหมดมุมมอง:</span>
+                <button id="btnViewSplit" onclick="switchView('split')" class="px-3 py-1.5 text-xs rounded-lg bg-brand-50 text-brand-700 font-medium border border-brand-200 flex items-center space-x-1">
+                    <i class="fa-solid fa-columns"></i>
+                    <span>แบ่งหน้าคู่ (Form + Preview)</span>
+                </button>
+                <button id="btnViewForm" onclick="switchView('form')" class="px-3 py-1.5 text-xs rounded-lg text-slate-600 hover:bg-slate-100 font-medium border border-slate-200 flex items-center space-x-1">
+                    <i class="fa-solid fa-pen-to-square"></i>
+                    <span>เฉพาะฟอร์ม</span>
+                </button>
+                <button id="btnViewPreview" onclick="switchView('preview')" class="px-3 py-1.5 text-xs rounded-lg text-slate-600 hover:bg-slate-100 font-medium border border-slate-200 flex items-center space-x-1">
+                    <i class="fa-solid fa-file-invoice"></i>
+                    <span>ตัวอย่างเอกสาร</span>
+                </button>
+            </div>
+
+            <div class="flex items-center space-x-3">
+                <button onclick="resetForm()" class="px-4 py-2 text-sm bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-medium transition flex items-center space-x-2">
+                    <i class="fa-solid fa-rotate-left"></i>
+                    <span>ล้างข้อมูล</span>
+                </button>
+                <button onclick="saveToGoogleSheets()" id="btnSaveSheets" class="px-4 py-2 text-sm bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-medium shadow-sm transition flex items-center space-x-2">
+                    <i class="fa-solid fa-cloud-arrow-up"></i>
+                    <span>บันทึกเข้า Google Sheets</span>
+                </button>
+                <button onclick="window.print()" class="px-5 py-2 text-sm bg-brand-700 hover:bg-brand-800 text-white rounded-xl font-medium shadow-md hover:shadow-lg transition flex items-center space-x-2">
+                    <i class="fa-solid fa-print"></i>
+                    <span>พิมพ์ / บันทึก PDF</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- App Layout (Form + Invoice Preview) -->
+        <div id="appContainer" class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+            
+            <!-- LEFT PANEL: Input Form -->
+            <div id="formSection" class="no-print lg:col-span-5 bg-white rounded-2xl shadow-sm border border-slate-200 p-6 space-y-6">
+                
+                <div class="border-b border-slate-100 pb-4">
+                    <h2 class="text-lg font-bold text-slate-800 flex items-center space-x-2">
+                        <i class="fa-solid fa-file-signature text-brand-700"></i>
+                        <span>กรอกข้อมูลใบกำกับภาษี</span>
+                    </h2>
+                    <p class="text-xs text-slate-500 mt-0.5">ระบุรายละเอียดบิล และข้อมูลลูกค้าสำหรับออกใบกำกับภาษีอย่างย่อ</p>
+                </div>
+
+                <!-- 1. ข้อมูลสาขาและเลขที่เอกสาร -->
+                <div class="space-y-4">
+                    <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400">1. สาขา & เลขที่เอกสาร</h3>
+                    
+                    <div class="space-y-3">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 mb-1">สาขาที่ออกเอกสาร <span class="text-rose-500">*</span></label>
+                            <select id="branchSelect" onchange="onBranchChange()" class="w-full text-sm bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 focus:outline-none focus:ring-2 focus:ring-brand-700 focus:border-transparent transition">
+                                <!-- Populated dynamically by JS -->
+                            </select>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-700 mb-1">เลขที่เอกสาร (Auto)</label>
+                                <div class="relative">
+                                    <input type="text" id="docNo" readonly class="w-full text-sm bg-slate-100 font-mono font-semibold text-brand-800 border border-slate-200 rounded-xl px-3.5 py-2.5 cursor-not-allowed">
+                                    <button type="button" onclick="incrementRunningNo()" title="สุ่มเพิ่มเลขที่" class="absolute right-2 top-2.5 text-xs text-slate-400 hover:text-slate-600">
+                                        <i class="fa-solid fa-rotate"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-700 mb-1">วันที่ออกเอกสาร</label>
+                                <input type="date" id="docDate" onchange="updatePreview()" class="w-full text-sm bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2 py-2.5 focus:outline-none focus:ring-2 focus:ring-brand-700">
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-700 mb-1">เลขที่บิล (Ref Bill)</label>
+                                <input type="text" id="billNo" placeholder="เช่น POS-0982" oninput="updatePreview()" class="w-full text-sm bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2 focus:outline-none focus:ring-2 focus:ring-brand-700">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-700 mb-1">โต๊ะ / Table</label>
+                                <input type="text" id="tableNo" placeholder="เช่น T-05" oninput="updatePreview()" class="w-full text-sm bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2 focus:outline-none focus:ring-2 focus:ring-brand-700">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <hr class="border-slate-100">
+
+                <!-- 2. ข้อมูลลูกค้า -->
+                <div class="space-y-4">
+                    <div class="flex items-center justify-between">
+                        <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400">2. ข้อมูลลูกค้า / ผู้ซื้อ</h3>
+                        <span class="text-[11px] text-brand-700 hover:underline cursor-pointer" onclick="fillDefaultCustomer()">[ รีเซ็ตเป็นลูกค้าทั่วไป ]</span>
+                    </div>
+
+                    <!-- TAX ID / Search -->
+                    <div class="relative">
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">ค้นหาจาก TAX ID หรือ ชื่อบริษัท</label>
+                        <div class="relative">
+                            <input type="text" id="customerSearch" oninput="onCustomerSearchInput(this.value)" placeholder="พิมพ์ TAX ID หรือชื่อเพื่อค้นหา..." class="w-full text-sm bg-slate-50 border border-slate-300 rounded-xl pl-9 pr-8 py-2.5 focus:outline-none focus:ring-2 focus:ring-brand-700">
+                            <i class="fa-solid fa-magnifying-glass absolute left-3 top-3.5 text-slate-400 text-xs"></i>
+                            <button type="button" onclick="clearCustomerSearch()" class="absolute right-3 top-3 text-slate-400 hover:text-slate-600">
+                                <i class="fa-solid fa-xmark text-xs"></i>
+                            </button>
+                        </div>
+                        <!-- Auto-complete Suggestions Dropdown -->
+                        <div id="customerSuggestions" class="hidden absolute z-20 w-full mt-1 bg-white border border-slate-200 rounded-xl shadow-lg max-h-48 overflow-y-auto text-xs"></div>
+                    </div>
+
+                    <div class="space-y-3">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 mb-1">ชื่อผู้ซื้อ / ชื่อบริษัท</label>
+                            <input type="text" id="custName" oninput="updatePreview()" value="ลูกค้าทั่วไป" class="w-full text-sm bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2 focus:outline-none focus:ring-2 focus:ring-brand-700">
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-700 mb-1">เลขประจำตัวผู้เสียภาษี (TAX ID)</label>
+                                <input type="text" id="custTaxId" oninput="updatePreview()" placeholder="เลข 13 หลัก" class="w-full text-sm bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2 font-mono focus:outline-none focus:ring-2 focus:ring-brand-700">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-700 mb-1">สาขาที่ (เช่น 00000 / HQ)</label>
+                                <input type="text" id="custBranch" oninput="updatePreview()" placeholder="สำนักงานใหญ่ / 00001" class="w-full text-sm bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2 focus:outline-none focus:ring-2 focus:ring-brand-700">
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 mb-1">ที่อยู่ บรรทัดที่ 1 (บ้านเลขที่/ซอย/ถนน)</label>
+                            <input type="text" id="custAddress1" oninput="updatePreview()" placeholder="-" class="w-full text-sm bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2 focus:outline-none focus:ring-2 focus:ring-brand-700">
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 mb-1">ที่อยู่ บรรทัดที่ 2 (แขวง/เขต/จังหวัด/โทร)</label>
+                            <input type="text" id="custAddress2" oninput="updatePreview()" placeholder="-" class="w-full text-sm bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2 focus:outline-none focus:ring-2 focus:ring-brand-700">
+                        </div>
+                    </div>
+                </div>
+
+                <hr class="border-slate-100">
+
+                <!-- 3. รายการเงินและคำนวณ -->
+                <div class="space-y-4">
+                    <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400">3. รายการเงิน & ส่วนลด</h3>
+                    
+                    <div class="space-y-3">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 mb-1">ยอดค่าอาหาร และเครื่องดื่ม (รวม VAT)</label>
+                            <div class="relative">
+                                <input type="number" step="0.01" id="foodAmount" oninput="calculateFinancials()" placeholder="0.00" class="w-full text-sm font-semibold bg-slate-50 border border-slate-300 rounded-xl pl-3.5 pr-8 py-2 focus:outline-none focus:ring-2 focus:ring-brand-700">
+                                <span class="absolute right-3 top-2 text-xs text-slate-400 font-medium">บาท</span>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-700 mb-1">Service Charge (+)</label>
+                                <input type="number" step="0.01" id="serviceCharge" oninput="calculateFinancials()" value="0.00" class="w-full text-sm bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2 focus:outline-none focus:ring-2 focus:ring-brand-700">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-700 mb-1">ส่วนลดรวม VAT (-)</label>
+                                <input type="number" step="0.01" id="discountAmount" oninput="calculateFinancials()" value="0.00" class="w-full text-sm bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2 focus:outline-none focus:ring-2 focus:ring-brand-700">
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 mb-1">ช่องทางชำระเงิน</label>
+                            <select id="paymentMethod" onchange="updatePreview()" class="w-full text-sm bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2 focus:outline-none focus:ring-2 focus:ring-brand-700">
+                                <option value="เงินสด (Cash)">เงินสด (Cash)</option>
+                                <option value="สแกน QR Code">สแกน QR Code</option>
+                                <option value="เครื่องรูดบัตร KTC">เครื่องรูดบัตร KTC</option>
+                                <option value="บัตรเติมเงิน HM/LXF">บัตรเติมเงิน HM/LXF</option>
+                                <option value="โอนเงินผ่านธนาคาร">โอนเงินผ่านธนาคาร</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Auto Calculation Display Box -->
+                    <div class="bg-slate-50 rounded-xl p-4 border border-slate-200 space-y-2 text-xs">
+                        <div class="flex justify-between text-slate-600">
+                            <span>มูลค่าก่อน VAT:</span>
+                            <span id="dispBeforeVat" class="font-mono font-medium">0.00 บาท</span>
+                        </div>
+                        <div class="flex justify-between text-slate-600">
+                            <span>ภาษีมูลค่าเพิ่ม (VAT 7%):</span>
+                            <span id="dispVat" class="font-mono font-medium">0.00 บาท</span>
+                        </div>
+                        <div class="flex justify-between text-slate-900 font-bold text-sm pt-2 border-t border-slate-200">
+                            <span>ยอดรวมสุทธิ (Grand Total):</span>
+                            <span id="dispGrandTotal" class="font-mono text-brand-700">0.00 บาท</span>
+                        </div>
+                        <div class="text-right text-[11px] text-slate-500 font-medium pt-1">
+                            (<span id="dispBahtText" class="italic">ศูนย์บาทถ้วน</span>)
+                        </div>
+                    </div>
+                </div>
+
+                <div class="pt-2">
+                    <button type="button" onclick="window.print()" class="w-full py-3 bg-brand-700 hover:bg-brand-800 text-white font-medium text-sm rounded-xl shadow transition flex items-center justify-center space-x-2">
+                        <i class="fa-solid fa-print"></i>
+                        <span>พิมพ์เอกสาร ใบกำกับภาษี (ABB)</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- RIGHT PANEL: Live Printable Invoice Preview (Original + Copy) -->
+            <div id="previewSection" class="lg:col-span-7 flex justify-center">
+                
+                <!-- Print Document Container (Standard A4 / Single Page view) -->
+                <div class="printable-area bg-white p-6 sm:p-8 rounded-2xl shadow-md border border-slate-200 w-full max-w-[210mm] text-slate-900 font-sarabun text-[13px] leading-snug space-y-6">
+                    
+                    <!-- ================= 1. ต้นฉบับ (ORIGINAL) ================= -->
+                    <div class="border-b-2 border-dashed border-slate-300 pb-6 relative">
+                        <div class="absolute -top-1 right-0 text-[10px] font-bold px-2 py-0.5 bg-slate-100 border border-slate-300 rounded text-slate-600">
+                            ต้นฉบับ (Original)
+                        </div>
+
+                        <!-- Company Header -->
+                        <div class="text-center space-y-1 mb-4">
+                            <h2 class="font-bold text-base sm:text-lg text-slate-900 leading-tight">บริษัท สยามฮ่องกง ไชนีสฟู้ด จำกัด</h2>
+                            <p class="text-[12px] text-slate-700">
+                                เลขที่ 5 ซอยลาดพร้าว 72 (ซอยร่มเย็น) ถนนลาดพร้าว แขวงวังทองหลาง เขตวังทองหลาง กรุงเทพฯ 10310<br>
+                                โทร. 029 339 087 , โทรสาร. 029 339 144 | <strong>Tax ID: 0105552009311</strong>
+                            </p>
+                            <div class="pt-1">
+                                <span class="inline-block border-b-2 border-slate-900 font-bold text-sm sm:text-base px-2 pb-0.5">
+                                    ใบกำกับภาษีอย่างย่อ / Tax Invoice (ABB)
+                                </span>
+                            </div>
+                            <p class="text-[12px] font-semibold text-slate-800">
+                                ออกโดยสาขาที่ : <span class="viewBranchName text-brand-800 font-bold">เอ็ม บี เค เซ็นเตอร์(00001)</span>
+                            </p>
+                        </div>
+
+                        <!-- Meta & Customer Info -->
+                        <div class="grid grid-cols-2 gap-4 text-[12px] mb-3 bg-slate-50 p-2.5 rounded border border-slate-200">
+                            <div class="space-y-1">
+                                <div><strong class="font-semibold">เลขที่เอกสาร / Doc No:</strong> <span class="viewDocNo font-mono font-bold text-slate-900">H01-11-0001</span></div>
+                                <div><strong class="font-semibold">วันที่ / Date:</strong> <span class="viewDocDate">03/11/2026</span></div>
+                                <div><strong class="font-semibold">เลขที่บิล / Ref Bill:</strong> <span class="viewBillNo">-</span> | <strong>โต๊ะ:</strong> <span class="viewTableNo">-</span></div>
+                            </div>
+                            <div class="space-y-1">
+                                <div><strong class="font-semibold">ชื่อ / Name:</strong> <span class="viewCustName font-semibold">ลูกค้าทั่วไป</span></div>
+                                <div><strong class="font-semibold">Tax ID / สาขา:</strong> <span class="viewCustTaxId">-</span> <span class="viewCustBranch"></span></div>
+                                <div><strong class="font-semibold">ที่อยู่ / Address:</strong> <span class="viewCustAddress">-</span></div>
+                            </div>
+                        </div>
+
+                        <!-- Items Table -->
+                        <table class="w-full text-[12px] border-collapse mb-3">
+                            <thead>
+                                <tr class="border-y border-slate-800 bg-slate-100">
+                                    <th class="py-1.5 px-2 text-left font-bold">รายการ (Description)</th>
+                                    <th class="py-1.5 px-2 text-right font-bold w-32">จำนวนเงิน (Amount)</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-200">
+                                <tr>
+                                    <td class="py-2 px-2 align-top">
+                                        อาหาร เครื่องดื่ม และค่าบริการ (ราคารวมภาษีมูลค่าเพิ่ม)
+                                        <div class="text-[10px] text-slate-500 font-normal">
+                                            (Food, Beverage & Service Charge Included VAT 7%)
+                                        </div>
+                                    </td>
+                                    <td class="py-2 px-2 text-right align-top font-mono font-semibold viewFoodAmount">0.00</td>
+                                </tr>
+                                <tr id="rowServiceCharge" class="hidden">
+                                    <td class="py-1 px-2 text-slate-600 text-[11px] pl-4">+ Service Charge</td>
+                                    <td class="py-1 px-2 text-right font-mono text-[11px] viewServiceCharge">0.00</td>
+                                </tr>
+                                <tr id="rowDiscount" class="hidden">
+                                    <td class="py-1 px-2 text-slate-600 text-[11px] pl-4">- ส่วนลด (Discount)</td>
+                                    <td class="py-1 px-2 text-right font-mono text-[11px] viewDiscount">0.00</td>
+                                </tr>
+                            </tbody>
+                            <tfoot class="border-t border-slate-800 font-semibold">
+                                <tr>
+                                    <td class="py-1.5 px-2 text-slate-700">
+                                        (<span class="viewBahtText">ศูนย์บาทถ้วน</span>)
+                                    </td>
+                                    <td class="py-1.5 px-2 text-right">
+                                        <div class="text-[10px] text-slate-500 font-normal">รวมทั้งสิ้น (Grand Total)</div>
+                                        <span class="viewGrandTotal font-mono text-sm font-bold">0.00</span>
+                                    </td>
+                                </tr>
+                            </tfoot>
+                        </table>
+
+                        <!-- Footer Signatures -->
+                        <div class="pt-4 flex justify-between items-end text-[11px] text-slate-700">
+                            <div>
+                                <span class="font-semibold">ชำระโดย:</span> <span class="viewPaymentMethod">เงินสด (Cash)</span>
+                            </div>
+                            <div class="text-center w-56">
+                                <div class="border-b border-dotted border-slate-400 mb-1 h-6"></div>
+                                <div>ผู้รับเงิน / Collector</div>
+                            </div>
+                        </div>
+                    </div>
+
+
+                    <!-- ================= 2. สำเนา (COPY) ================= -->
+                    <div class="pt-2 relative">
+                        <div class="absolute top-2 right-0 text-[10px] font-bold px-2 py-0.5 bg-slate-100 border border-slate-300 rounded text-slate-600">
+                            สำเนา (Copy)
+                        </div>
+
+                        <!-- Company Header -->
+                        <div class="text-center space-y-1 mb-4">
+                            <h2 class="font-bold text-base sm:text-lg text-slate-900 leading-tight">บริษัท สยามฮ่องกง ไชนีสฟู้ด จำกัด</h2>
+                            <p class="text-[12px] text-slate-700">
+                                เลขที่ 5 ซอยลาดพร้าว 72 (ซอยร่มเย็น) ถนนลาดพร้าว แขวงวังทองหลาง เขตวังทองหลาง กรุงเทพฯ 10310<br>
+                                โทร. 029 339 087 , โทรสาร. 029 339 144 | <strong>Tax ID: 0105552009311</strong>
+                            </p>
+                            <div class="pt-1">
+                                <span class="inline-block border-b-2 border-slate-900 font-bold text-sm sm:text-base px-2 pb-0.5">
+                                    ใบกำกับภาษีอย่างย่อ / Tax Invoice (ABB) (สำเนา)
+                                </span>
+                            </div>
+                            <p class="text-[12px] font-semibold text-slate-800">
+                                ออกโดยสาขาที่ : <span class="viewBranchName text-brand-800 font-bold">เอ็ม บี เค เซ็นเตอร์(00001)</span>
+                            </p>
+                        </div>
+
+                        <!-- Meta & Customer Info -->
+                        <div class="grid grid-cols-2 gap-4 text-[12px] mb-3 bg-slate-50 p-2.5 rounded border border-slate-200">
+                            <div class="space-y-1">
+                                <div><strong class="font-semibold">เลขที่เอกสาร / Doc No:</strong> <span class="viewDocNo font-mono font-bold text-slate-900">H01-11-0001</span></div>
+                                <div><strong class="font-semibold">วันที่ / Date:</strong> <span class="viewDocDate">03/11/2026</span></div>
+                                <div><strong class="font-semibold">เลขที่บิล / Ref Bill:</strong> <span class="viewBillNo">-</span> | <strong>โต๊ะ:</strong> <span class="viewTableNo">-</span></div>
+                            </div>
+                            <div class="space-y-1">
+                                <div><strong class="font-semibold">ชื่อ / Name:</strong> <span class="viewCustName font-semibold">ลูกค้าทั่วไป</span></div>
+                                <div><strong class="font-semibold">Tax ID / สาขา:</strong> <span class="viewCustTaxId">-</span> <span class="viewCustBranch"></span></div>
+                                <div><strong class="font-semibold">ที่อยู่ / Address:</strong> <span class="viewCustAddress">-</span></div>
+                            </div>
+                        </div>
+
+                        <!-- Items Table -->
+                        <table class="w-full text-[12px] border-collapse mb-3">
+                            <thead>
+                                <tr class="border-y border-slate-800 bg-slate-100">
+                                    <th class="py-1.5 px-2 text-left font-bold">รายการ (Description)</th>
+                                    <th class="py-1.5 px-2 text-right font-bold w-32">จำนวนเงิน (Amount)</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-200">
+                                <tr>
+                                    <td class="py-2 px-2 align-top">
+                                        อาหาร เครื่องดื่ม และค่าบริการ (ราคารวมภาษีมูลค่าเพิ่ม)
+                                        <div class="text-[10px] text-slate-500 font-normal">
+                                            (Food, Beverage & Service Charge Included VAT 7%)
+                                        </div>
+                                    </td>
+                                    <td class="py-2 px-2 text-right align-top font-mono font-semibold viewFoodAmount">0.00</td>
+                                </tr>
+                                <tr id="rowServiceChargeCopy" class="hidden">
+                                    <td class="py-1 px-2 text-slate-600 text-[11px] pl-4">+ Service Charge</td>
+                                    <td class="py-1 px-2 text-right font-mono text-[11px] viewServiceCharge">0.00</td>
+                                </tr>
+                                <tr id="rowDiscountCopy" class="hidden">
+                                    <td class="py-1 px-2 text-slate-600 text-[11px] pl-4">- ส่วนลด (Discount)</td>
+                                    <td class="py-1 px-2 text-right font-mono text-[11px] viewDiscount">0.00</td>
+                                </tr>
+                            </tbody>
+                            <tfoot class="border-t border-slate-800 font-semibold">
+                                <tr>
+                                    <td class="py-1.5 px-2 text-slate-700">
+                                        (<span class="viewBahtText">ศูนย์บาทถ้วน</span>)
+                                    </td>
+                                    <td class="py-1.5 px-2 text-right">
+                                        <div class="text-[10px] text-slate-500 font-normal">รวมทั้งสิ้น (Grand Total)</div>
+                                        <span class="viewGrandTotal font-mono text-sm font-bold">0.00</span>
+                                    </td>
+                                </tr>
+                            </tfoot>
+                        </table>
+
+                        <!-- Footer Signatures -->
+                        <div class="pt-4 flex justify-between items-end text-[11px] text-slate-700">
+                            <div>
+                                <span class="font-semibold">ชำระโดย:</span> <span class="viewPaymentMethod">เงินสด (Cash)</span>
+                            </div>
+                            <div class="text-center w-56">
+                                <div class="border-b border-dotted border-slate-400 mb-1 h-6"></div>
+                                <div>ผู้รับเงิน / Collector</div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Settings Modal (Google Apps Script Web App Connection) -->
+    <div id="settingsModal" class="no-print hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
+            <div class="flex items-center justify-between border-b pb-3">
+                <h3 class="font-bold text-slate-800 text-base">ตั้งค่าการเชื่อมต่อ Google Sheets</h3>
+                <button onclick="closeSettingsModal()" class="text-slate-400 hover:text-slate-600">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+            <p class="text-xs text-slate-600 leading-relaxed">
+                คุณสามารถนำ <strong>Web App URL</strong> ที่ได้จาก Google Apps Script มาวางไว้ด้านล่าง เพื่อให้กดปุ่ม "บันทึกเข้า Google Sheets" แล้วส่งข้อมูลเข้าชีตแบบเรียลไทม์
+            </p>
+            <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1">Google Apps Script Web App URL</label>
+                <input type="url" id="scriptUrlInput" placeholder="https://script.google.com/macros/s/.../exec" class="w-full text-xs bg-slate-50 border border-slate-300 rounded-xl px-3 py-2.5 font-mono focus:ring-2 focus:ring-brand-700 focus:outline-none">
+            </div>
+            <div class="flex justify-end space-x-2 pt-2">
+                <button onclick="closeSettingsModal()" class="px-4 py-2 text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-medium">ยกเลิก</button>
+                <button onclick="saveSettings()" class="px-4 py-2 text-xs bg-brand-700 hover:bg-brand-800 text-white rounded-xl font-medium">บันทึกตั้งค่า</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notification Toast -->
+    <div id="toast" class="no-print fixed bottom-5 right-5 z-50 transform translate-y-20 opacity-0 transition-all duration-300 bg-slate-900 text-white text-xs px-4 py-3 rounded-xl shadow-xl flex items-center space-x-2">
+        <i id="toastIcon" class="fa-solid fa-circle-check text-emerald-400"></i>
+        <span id="toastMsg">บันทึกข้อมูลเรียบร้อยแล้ว</span>
+    </div>
+
+    <!-- Application Logic Javascript -->
+    <script>
+        // -------------------------------------------------------------
+        // 1. DATA CONFIGURATION & MASTER DATA
+        // -------------------------------------------------------------
+        const BRANCHES = [
+            { code: 'H00', name: 'สำนักงานใหญ่(00000)', prefix: 'H00' },
+            { code: 'H01', name: 'เอ็ม บี เค เซ็นเตอร์(00001)', prefix: 'H01' },
+            { code: 'H03', name: 'บิ๊กซีลาดพร้าว 2 (00003)', prefix: 'H03' },
+            { code: 'H04', name: 'ฟิวเจอร์พาร์ครังสิต(00004)', prefix: 'H04' },
+            { code: 'H05', name: 'แฟชั่นไอส์แลนด์(00005)', prefix: 'H05' },
+            { code: 'H06', name: 'ลาดพร้าว 72 (00006)', prefix: 'H06' },
+            { code: 'H12', name: 'เมกาบางนา(00012)', prefix: 'H12' },
+            { code: 'H13', name: 'เดอะพรอมานาด(00013)', prefix: 'H13' },
+            { code: 'H15', name: 'เดอะพาซิโอ พาร์ค(00015)', prefix: 'H15' },
+            { code: 'H16', name: 'หลิวเซียงฟง ฟิวเจอร์พาร์ครังสิต(00016)', prefix: 'H16' }
+        ];
+
+        // Sample Customer Database (Simulating the Customers Sheet)
+        const CUSTOMER_DB = [
+            {
+                taxId: '0105552009311',
+                name: 'บริษัท สยามฮ่องกง ไชนีสฟู้ด จำกัด',
+                branch: 'สำนักงานใหญ่ (00000)',
+                addr1: 'เลขที่ 5 ซอยลาดพร้าว 72 (ซอยร่มเย็น) ถนนลาดพร้าว',
+                addr2: 'แขวงวังทองหลาง เขตวังทองหลาง กรุงเทพมหานคร 10310'
+            },
+            {
+                taxId: '0105561023941',
+                name: 'บริษัท เออออออออออออออ จำกัด',
+                branch: 'สำนักงานใหญ่ (00000)',
+                addr1: '888/99 ถนนสุขุมวิท 21 แขวงคลองเตยเหนือ',
+                addr2: 'เขตวัฒนา กรุงเทพมหานคร 10110 โทร. 02-123-4567'
+            },
+            {
+                taxId: '0105548012345',
+                name: 'บริษัท ซีพี ออลล์ จำกัด (มหาชน)',
+                branch: 'สำนักงานใหญ่',
+                addr1: '313 อาคารซีพี ทาวเวอร์ ชั้น 24 ถนนสีลม',
+                addr2: 'แขวงสีลม เขตบางรัก กรุงเทพมหานคร 10500'
+            },
+            {
+                taxId: '0105539098765',
+                name: 'บริษัท เซ็นทรัลพัฒนา จำกัด (มหาชน)',
+                branch: 'สาขาพระราม 9 (00003)',
+                addr1: '999/9 ถนนพระราม 9 แขวงห้วยขวาง',
+                addr2: 'เขตห้วยขวาง กรุงเทพมหานคร 10310'
+            }
+        ];
+
+        // Store running numbers in localStorage per branch
+        let runningNoStore = JSON.parse(localStorage.getItem('sh_running_nos') || '{}');
+
+        // -------------------------------------------------------------
+        // 2. INITIALIZATION
+        // -------------------------------------------------------------
+        window.onload = function() {
+            initBranchSelect();
+            setTodayDate();
+            generateDocNo();
+            calculateFinancials();
+            
+            // Close suggestions on outside click
+            document.addEventListener('click', function(e) {
+                if (!e.target.closest('#customerSearch') && !e.target.closest('#customerSuggestions')) {
+                    document.getElementById('customerSuggestions').classList.add('hidden');
+                }
+            });
+        };
+
+        function initBranchSelect() {
+            const select = document.getElementById('branchSelect');
+            select.innerHTML = '';
+            BRANCHES.forEach(b => {
+                const opt = document.createElement('option');
+                opt.value = b.code;
+                opt.textContent = `${b.name}`;
+                select.appendChild(opt);
+            });
+            // Default to MBK (H01)
+            select.value = 'H01';
+        }
+
+        function setTodayDate() {
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('docDate').value = today;
+        }
+
+        // -------------------------------------------------------------
+        // 3. AUTO-RUNNING DOCUMENT NUMBER LOGIC
+        // -------------------------------------------------------------
+        function onBranchChange() {
+            generateDocNo();
+            updatePreview();
+        }
+
+        function generateDocNo() {
+            const branchCode = document.getElementById('branchSelect').value;
+            const branch = BRANCHES.find(b => b.code === branchCode) || BRANCHES[0];
+            
+            // Format Month MM
+            const dateVal = document.getElementById('docDate').value || new Date().toISOString().split('T')[0];
+            const monthStr = String(new Date(dateVal).getMonth() + 1).padStart(2, '0');
+
+            // Fetch running number from storage or start at 1
+            const key = `${branch.code}_${monthStr}`;
+            let currentNo = runningNoStore[key] || 1;
+            
+            const numStr = String(currentNo).padStart(4, '0');
+            const docNoFormatted = `${branch.prefix}-${monthStr}-${numStr}`;
+            
+            document.getElementById('docNo').value = docNoFormatted;
+            updatePreview();
+        }
+
+        function incrementRunningNo() {
+            const branchCode = document.getElementById('branchSelect').value;
+            const dateVal = document.getElementById('docDate').value || new Date().toISOString().split('T')[0];
+            const monthStr = String(new Date(dateVal).getMonth() + 1).padStart(2, '0');
+            const key = `${branchCode}_${monthStr}`;
+
+            runningNoStore[key] = (runningNoStore[key] || 1) + 1;
+            localStorage.setItem('sh_running_nos', JSON.stringify(runningNoStore));
+            generateDocNo();
+            showToast('อัปเดตเลขที่เอกสารถัดไปเรียบร้อย');
+        }
+
+        // -------------------------------------------------------------
+        // 4. CUSTOMER AUTO-COMPLETE / LOOKUP
+        // -------------------------------------------------------------
+        function onCustomerSearchInput(query) {
+            const suggestionsEl = document.getElementById('customerSuggestions');
+            if (!query.trim()) {
+                suggestionsEl.classList.add('hidden');
+                return;
+            }
+
+            const q = query.toLowerCase();
+            const matches = CUSTOMER_DB.filter(c => 
+                c.taxId.includes(q) || c.name.toLowerCase().includes(q)
+            );
+
+            if (matches.length === 0) {
+                suggestionsEl.classList.add('hidden');
+                return;
+            }
+
+            suggestionsEl.innerHTML = '';
+            matches.forEach(c => {
+                const item = document.createElement('div');
+                item.className = 'px-3 py-2 hover:bg-slate-100 cursor-pointer border-b border-slate-100 last:border-none';
+                item.innerHTML = `
+                    <div class="font-semibold text-slate-800">${c.name}</div>
+                    <div class="text-[11px] text-slate-500">TAX ID: ${c.taxId} | ${c.branch}</div>
+                `;
+                item.onclick = function() {
+                    selectCustomer(c);
+                };
+                suggestionsEl.appendChild(item);
+            });
+            suggestionsEl.classList.remove('hidden');
+        }
+
+        function selectCustomer(cust) {
+            document.getElementById('custName').value = cust.name;
+            document.getElementById('custTaxId').value = cust.taxId;
+            document.getElementById('custBranch').value = cust.branch;
+            document.getElementById('custAddress1').value = cust.addr1;
+            document.getElementById('custAddress2').value = cust.addr2;
+            document.getElementById('customerSearch').value = cust.taxId;
+            
+            document.getElementById('customerSuggestions').classList.add('hidden');
+            updatePreview();
+            showToast('โหลดข้อมูลลูกค้าเรียบร้อยแล้ว');
+        }
+
+        function clearCustomerSearch() {
+            document.getElementById('customerSearch').value = '';
+            document.getElementById('customerSuggestions').classList.add('hidden');
+        }
+
+        function fillDefaultCustomer() {
+            document.getElementById('custName').value = 'ลูกค้าทั่วไป';
+            document.getElementById('custTaxId').value = '';
+            document.getElementById('custBranch').value = '';
+            document.getElementById('custAddress1').value = '-';
+            document.getElementById('custAddress2').value = '-';
+            clearCustomerSearch();
+            updatePreview();
+        }
+
+        // -------------------------------------------------------------
+        // 5. FINANCIAL CALCULATIONS & BAHTTEXT CONVERSION
+        // -------------------------------------------------------------
+        function calculateFinancials() {
+            const food = parseFloat(document.getElementById('foodAmount').value) || 0;
+            const service = parseFloat(document.getElementById('serviceCharge').value) || 0;
+            const discount = parseFloat(document.getElementById('discountAmount').value) || 0;
+
+            const grandTotal = Math.max(0, (food + service) - discount);
+            
+            // Extract VAT (Inclusive VAT 7%)
+            // GrandTotal = BeforeVat * 1.07 -> BeforeVat = GrandTotal / 1.07
+            const beforeVat = grandTotal / 1.07;
+            const vatAmount = grandTotal - beforeVat;
+            const bahtText = ArabicToThaiBaht(grandTotal);
+
+            // Display in Form Box
+            document.getElementById('dispBeforeVat').innerText = formatMoney(beforeVat) + ' บาท';
+            document.getElementById('dispVat').innerText = formatMoney(vatAmount) + ' บาท';
+            document.getElementById('dispGrandTotal').innerText = formatMoney(grandTotal) + ' บาท';
+            document.getElementById('dispBahtText').innerText = bahtText;
+
+            // Optional rows toggle in invoice
+            const rowSc = document.getElementById('rowServiceCharge');
+            const rowScCopy = document.getElementById('rowServiceChargeCopy');
+            if(service > 0) {
+                rowSc.classList.remove('hidden');
+                rowScCopy.classList.remove('hidden');
+            } else {
+                rowSc.classList.add('hidden');
+                rowScCopy.classList.add('hidden');
+            }
+
+            const rowDisc = document.getElementById('rowDiscount');
+            const rowDiscCopy = document.getElementById('rowDiscountCopy');
+            if(discount > 0) {
+                rowDisc.classList.remove('hidden');
+                rowDiscCopy.classList.remove('hidden');
+            } else {
+                rowDisc.classList.add('hidden');
+                rowDiscCopy.classList.add('hidden');
+            }
+
+            updatePreview();
+        }
+
+        function formatMoney(amount) {
+            return amount.toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
+
+        // Thai Baht Text Conversion Algorithm
+        function ArabicToThaiBaht(number) {
+            if (isNaN(number) || number < 0) return 'ศูนย์บาทถ้วน';
+            
+            number = Math.round(number * 100) / 100;
+            let [baht, satang] = number.toString().split('.');
+            
+            if (!satang) satang = '00';
+            if (satang.length === 1) satang += '0';
+
+            const numbers = ['', 'หนึ่ง', 'สอง', 'สาม', 'สี่', 'ห้า', 'หก', 'เจ็ด', 'แปด', 'เก้า'];
+            const units = ['', 'สิบ', 'ร้อย', 'พัน', 'หมื่น', 'แสน', 'ล้าน'];
+
+            function convert(str) {
+                let text = '';
+                const len = str.length;
+                for (let i = 0; i < len; i++) {
+                    const digit = parseInt(str[i]);
+                    const pos = len - i - 1;
+
+                    if (digit !== 0) {
+                        if (pos === 0 && digit === 1 && len > 1) {
+                            text += 'เอ็ด';
+                        } else if (pos === 1 && digit === 2) {
+                            text += 'ยี่';
+                        } else if (pos === 1 && digit === 1) {
+                            text += '';
+                        } else {
+                            text += numbers[digit];
+                        }
+                        text += units[pos % 6];
+                        if (pos >= 6 && pos % 6 === 0) text += 'ล้าน';
+                    }
+                }
+                return text;
+            }
+
+            let result = '';
+            if (parseInt(baht) === 0 || baht === '') {
+                result += 'ศูนย์บาท';
+            } else {
+                result += convert(baht) + 'บาท';
+            }
+
+            if (parseInt(satang) === 0) {
+                result += 'ถ้วน';
+            } else {
+                result += convert(satang) + 'สตางค์';
+            }
+
+            return result;
+        }
+
+        // -------------------------------------------------------------
+        // 6. REAL-TIME PREVIEW UPDATE
+        // -------------------------------------------------------------
+        function updatePreview() {
+            const branchCode = document.getElementById('branchSelect').value;
+            const branchObj = BRANCHES.find(b => b.code === branchCode) || BRANCHES[0];
+            
+            const docNo = document.getElementById('docNo').value;
+            const rawDate = document.getElementById('docDate').value;
+            let formattedDate = '-';
+            if (rawDate) {
+                const d = new Date(rawDate);
+                formattedDate = `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`;
+            }
+
+            const billNo = document.getElementById('billNo').value || '-';
+            const tableNo = document.getElementById('tableNo').value || '-';
+            
+            const custName = document.getElementById('custName').value || 'ลูกค้าทั่วไป';
+            const custTaxId = document.getElementById('custTaxId').value || '-';
+            const custBranch = document.getElementById('custBranch').value ? `(${document.getElementById('custBranch').value})` : '';
+            
+            const addr1 = document.getElementById('custAddress1').value || '';
+            const addr2 = document.getElementById('custAddress2').value || '';
+            const fullAddress = (addr1 || addr2) ? `${addr1} ${addr2}`.trim() : '-';
+
+            const food = parseFloat(document.getElementById('foodAmount').value) || 0;
+            const service = parseFloat(document.getElementById('serviceCharge').value) || 0;
+            const discount = parseFloat(document.getElementById('discountAmount').value) || 0;
+            const grandTotal = Math.max(0, (food + service) - discount);
+            const bahtText = ArabicToThaiBaht(grandTotal);
+
+            const payment = document.getElementById('paymentMethod').value;
+
+            // DOM Updates for Preview (Original & Copy)
+            document.querySelectorAll('.viewBranchName').forEach(el => el.innerText = branchObj.name);
+            document.querySelectorAll('.viewDocNo').forEach(el => el.innerText = docNo);
+            document.querySelectorAll('.viewDocDate').forEach(el => el.innerText = formattedDate);
+            document.querySelectorAll('.viewBillNo').forEach(el => el.innerText = billNo);
+            document.querySelectorAll('.viewTableNo').forEach(el => el.innerText = tableNo);
+            
+            document.querySelectorAll('.viewCustName').forEach(el => el.innerText = custName);
+            document.querySelectorAll('.viewCustTaxId').forEach(el => el.innerText = custTaxId);
+            document.querySelectorAll('.viewCustBranch').forEach(el => el.innerText = custBranch);
+            document.querySelectorAll('.viewCustAddress').forEach(el => el.innerText = fullAddress);
+
+            document.querySelectorAll('.viewFoodAmount').forEach(el => el.innerText = formatMoney(food));
+            document.querySelectorAll('.viewServiceCharge').forEach(el => el.innerText = formatMoney(service));
+            document.querySelectorAll('.viewDiscount').forEach(el => el.innerText = formatMoney(discount));
+            document.querySelectorAll('.viewGrandTotal').forEach(el => el.innerText = formatMoney(grandTotal));
+            document.querySelectorAll('.viewBahtText').forEach(el => el.innerText = bahtText);
+            document.querySelectorAll('.viewPaymentMethod').forEach(el => el.innerText = payment);
+        }
+
+        // -------------------------------------------------------------
+        // 7. VIEW MODE SWITCHING & ACTIONS
+        // -------------------------------------------------------------
+        function switchView(mode) {
+            const formSec = document.getElementById('formSection');
+            const previewSec = document.getElementById('previewSection');
+            
+            const btnSplit = document.getElementById('btnViewSplit');
+            const btnForm = document.getElementById('btnViewForm');
+            const btnPreview = document.getElementById('btnViewPreview');
+
+            // Reset buttons
+            [btnSplit, btnForm, btnPreview].forEach(b => {
+                b.className = "px-3 py-1.5 text-xs rounded-lg text-slate-600 hover:bg-slate-100 font-medium border border-slate-200 flex items-center space-x-1";
+            });
+
+            const activeClass = "px-3 py-1.5 text-xs rounded-lg bg-brand-50 text-brand-700 font-medium border border-brand-200 flex items-center space-x-1";
+
+            if (mode === 'split') {
+                formSec.className = "no-print lg:col-span-5 bg-white rounded-2xl shadow-sm border border-slate-200 p-6 space-y-6";
+                previewSec.className = "lg:col-span-7 flex justify-center";
+                btnSplit.className = activeClass;
+            } else if (mode === 'form') {
+                formSec.className = "no-print lg:col-span-12 max-w-2xl mx-auto bg-white rounded-2xl shadow-sm border border-slate-200 p-6 space-y-6";
+                previewSec.className = "hidden";
+                btnForm.className = activeClass;
+            } else if (mode === 'preview') {
+                formSec.className = "hidden";
+                previewSec.className = "lg:col-span-12 flex justify-center";
+                btnPreview.className = activeClass;
+            }
+        }
+
+        function resetForm() {
+            document.getElementById('foodAmount').value = '';
+            document.getElementById('serviceCharge').value = '0.00';
+            document.getElementById('discountAmount').value = '0.00';
+            document.getElementById('billNo').value = '';
+            document.getElementById('tableNo').value = '';
+            fillDefaultCustomer();
+            calculateFinancials();
+            showToast('ล้างข้อมูลเรียบร้อยแล้ว');
+        }
+
+        // -------------------------------------------------------------
+        // 8. GOOGLE SHEETS INTEGRATION & SETTINGS
+        // -------------------------------------------------------------
+        function saveToGoogleSheets() {
+            const scriptUrl = localStorage.getItem('sh_script_url');
+            const docNo = document.getElementById('docNo').value;
+            const branchCode = document.getElementById('branchSelect').value;
+
+            const payload = {
+                date: document.getElementById('docDate').value,
+                docNo: docNo,
+                branch: branchCode,
+                billNo: document.getElementById('billNo').value,
+                tableNo: document.getElementById('tableNo').value,
+                custName: document.getElementById('custName').value,
+                custTaxId: document.getElementById('custTaxId').value,
+                custBranch: document.getElementById('custBranch').value,
+                custAddress: `${document.getElementById('custAddress1').value} ${document.getElementById('custAddress2').value}`.trim(),
+                foodAmount: document.getElementById('foodAmount').value,
+                serviceCharge: document.getElementById('serviceCharge').value,
+                discount: document.getElementById('discountAmount').value,
+                grandTotal: document.getElementById('dispGrandTotal').innerText.replace(' บาท', ''),
+                paymentMethod: document.getElementById('paymentMethod').value
+            };
+
+            if (!scriptUrl) {
+                // If no URL is set, show instruction modal or simulation toast
+                showToast('จำลองการบันทึกสำเร็จ (โปรดตั้งค่า Web App URL)');
+                openSettingsModal();
+                return;
+            }
+
+            const btn = document.getElementById('btnSaveSheets');
+            btn.disabled = true;
+            btn.innerHTML = `<i class="fa-solid fa-spinner animate-spin"></i> <span>กำลังบันทึก...</span>`;
+
+            fetch(scriptUrl, {
+                method: 'POST',
+                mode: 'no-cors',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            })
+            .then(() => {
+                showToast(`บันทึกเอกสาร ${docNo} ลง Google Sheets สำเร็จ!`);
+                incrementRunningNo(); // Auto-advance running number after save
+            })
+            .catch(err => {
+                console.error(err);
+                showToast('เกิดข้อผิดพลาดในการบันทึกข้อมูล');
+            })
+            .finally(() => {
+                btn.disabled = false;
+                btn.innerHTML = `<i class="fa-solid fa-cloud-arrow-up"></i> <span>บันทึกเข้า Google Sheets</span>`;
+            });
+        }
+
+        function openSettingsModal() {
+            document.getElementById('scriptUrlInput').value = localStorage.getItem('sh_script_url') || '';
+            document.getElementById('settingsModal').classList.remove('hidden');
+        }
+
+        function closeSettingsModal() {
+            document.getElementById('settingsModal').classList.add('hidden');
+        }
+
+        function saveSettings() {
+            const url = document.getElementById('scriptUrlInput').value.trim();
+            localStorage.setItem('sh_script_url', url);
+            closeSettingsModal();
+            showToast('บันทึกการตั้งค่า API สำเร็จ');
+        }
+
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toastMsg').innerText = msg;
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            setTimeout(() => {
+                toast.classList.add('translate-y-20', 'opacity-0');
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
